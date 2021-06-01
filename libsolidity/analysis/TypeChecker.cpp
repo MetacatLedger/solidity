@@ -629,16 +629,30 @@ void TypeChecker::visitManually(
 	if (auto modifierDecl = dynamic_cast<ModifierDefinition const*>(declaration))
 	{
 		parameters = &modifierDecl->parameters();
-		if (auto const* modifierContract = dynamic_cast<ContractDefinition const*>(modifierDecl->scope()))
-			if (m_currentContract)
+		solAssert(modifierDecl->annotation().contract, "");
+		auto const* modifierContract = dynamic_cast<ContractDefinition const*>(modifierDecl->scope());
+		solAssert(modifierContract, "");
+		if (m_currentContract)
+		{
+			if (!contains(m_currentContract->annotation().linearizedBaseContracts, modifierContract))
+				m_errorReporter.typeError(
+				9428_error,
+					_modifier.location(),
+					"Can only use modifiers defined in the current contract or in base contracts."
+				);
+
+			if (m_currentContract->derivesFrom(*modifierDecl->annotation().contract) &&
+				!modifierDecl->isImplemented()
+			)
 			{
-				if (!contains(m_currentContract->annotation().linearizedBaseContracts, modifierContract))
-					m_errorReporter.typeError(
-						9428_error,
-						_modifier.location(),
-						"Can only use modifiers defined in the current contract or in base contracts."
-					);
+				m_errorReporter.typeError(
+					9113_error,
+					_modifier.location(),
+					"Cannot call unimplemented modifier."
+				);
 			}
+		}
+
 	}
 	else
 		// check parameters for Base constructors
