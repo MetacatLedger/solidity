@@ -153,6 +153,8 @@ function test_solc_behaviour()
         sed -i.bak -E -e 's/(\"object\":\"[^"]+\$__)[0-9a-f]+(\")/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
         # shellcheck disable=SC2016
         sed -i.bak -E -e 's/([0-9a-f]{34}\$__)[0-9a-f]+(__\$[0-9a-f]{17})/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
+        # Remove metadata in assembly output (see below about the magic numbers)
+        sed -i.bak -E -e 's/"[0-9a-f]+64697066735822[0-9a-f]+64736f6c63[0-9a-f]+/"<METADATA REMOVED>/g' "$stdout_path"
 
         # Replace escaped newlines by actual newlines for readability
         # shellcheck disable=SC1003
